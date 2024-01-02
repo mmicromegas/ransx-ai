@@ -36,10 +36,3 @@ pip install -r requirements.txt
 
 1. cd ransx-ai
 2. streamlit run app.py
-
-
-
-
-# Usage
-
-1. cd ransX
