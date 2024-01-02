@@ -17,7 +17,7 @@ cd ransx-ai
 Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) and create a Conda environment:
 
 ```
-conda create --name ransX python=3.10
+conda create --name ransx-ai python=3.10
 ```
 
 Activate the environment:
