@@ -1,2 +1,5 @@
 config.json
+config_private.json
 venv
+google_creds
+*.json

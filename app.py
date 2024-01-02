@@ -10,14 +10,45 @@ import json
 import google.generativeai as genai
 from IPython.display import Markdown
 
+# pix2tex[gui]
+
 # read json config
-json_config = json.load(open("config.json", "r"))
+json_config = json.load(open("config_private.json", "r"))
 
 OPENAI_API_KEY = json_config["openai_api_key"]
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-gemini_api_key = json_config["gemini_api_key"]
-genai.configure(api_key = gemini_api_key)
+#gemini_api_key = json_config["gemini_api_key"]
+#genai.configure(api_key = gemini_api_key) # this requires access to Google AI Studio, not available in all regions
+
+# use Vertex AI
+# https://medium.com/google-cloud/a-pisceans-take-on-gemini-b9681a0fa04d
+
+from google.cloud import aiplatform
+import vertexai.preview
+
+#Authenticate
+#from google.colab import auth
+#auth.authenticate_user()
+
+#Restart Kernel
+#import IPython
+#app = IPython.Application.instance()
+#app.kernel.do_shutdown(True)
+
+#Set PROJECT_ID and REGION variables
+import vertexai.preview
+import vertexai
+PROJECT_ID = "data-dragon-409706"  # your project id
+REGION = "us-central1"
+
+vertexai.init(project=PROJECT_ID, location=REGION)
+
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:\\Users\\mmocak\\PycharmProjects\\ransx-ai\\google_creds\\data-dragon-409706-f89f065f78c3.json'
+
+from vertexai.language_models import TextEmbeddingModel
+from vertexai.preview.generative_models import GenerativeModel, Image
+#vision_model = GenerativeModel("gemini-pro-vision")
 
 def encode_image(uploaded_file):
   return base64.b64encode(uploaded_file.getvalue()).decode('utf-8')
@@ -39,13 +70,13 @@ def analyze_image(image_data_list, question, ai_input_model, is_url=False):
         response = client.chat.completions.create(model="gpt-4-vision-preview", messages=messages,max_tokens=4096)
         return response.choices[0].message.content
     elif ai_input_model == 'Gemini Pro Vision':
-        #for image_data in image_data_list:
-        #    img = PIL.Image.open(image_data)
-        #    model = genai.GenerativeModel('gemini-pro-vision')
-        #    response = model.generate_content(img)
+        for image_data in image_data_list:
+            img = PIL.Image.open(image_data)
+            model = genai.GenerativeModel('gemini-pro-vision')
+            response = model.generate_content(img)
 
-        #return Markdown(response.text)
-        return "Gemini Pro Vision not available in your region"
+        return Markdown(response.text)
+        #return "Gemini Pro Vision not available in your region"
 
 
 st.set_page_config(page_title="AI Vision for Data Analysis", page_icon="🔍")
@@ -59,22 +90,32 @@ image_input_method = st.radio("Select Image Input Method",
 user_question = st.text_input("Enter your question for the image",
                               value="Explain this image")
 
-image_data_list = []
+image_data_list_for_openai_gpt4_vision = []
+image_data_list_for_google_gemini_vision = []
 
 if image_input_method == 'Upload Image':
   uploaded_files = st.file_uploader("Choose images...", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
   if uploaded_files:
     for uploaded_file in uploaded_files:
-      image_data_list.append(encode_image(uploaded_file))
+      image_data_list_for_openai_gpt4_vision.append(encode_image(uploaded_file))
+      image_data_list_for_google_gemini_vision.append(uploaded_file)
     if st.button('Analyze image(s)'):
-      insights = analyze_image(image_data_list, user_question, ai_input_model)
+        if ai_input_model == 'GPT-4 Vision':
+          insights = analyze_image(image_data_list_for_openai_gpt4_vision, user_question, ai_input_model)
+          # show image in the UI
+          for image_data in image_data_list_for_openai_gpt4_vision:
+            st.image(decode_image(image_data))
 
-      # show image in the UI
-      for image_data in image_data_list:
-        st.image(decode_image(image_data))
+          print(insights)
+          st.write(insights)
+        elif ai_input_model == 'Gemini Pro Vision':
+            insights = analyze_image(image_data_list_for_google_gemini_vision, user_question, ai_input_model)
+            # show image in the UI
+            for image_data in image_data_list_for_openai_gpt4_vision:
+                st.image(image_data)
+        else:
+            st.write("Error: AI Model not supported")
 
-      print(insights)
-      st.write(insights)
 elif image_input_method == 'Enter Image URL':
   image_urls = st.text_area("Enter the URLs of the images, one per line")
   if image_urls and st.button('Analyze image URL(s)'):
