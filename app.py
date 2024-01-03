@@ -39,12 +39,13 @@ import vertexai.preview
 #Set PROJECT_ID and REGION variables
 import vertexai.preview
 import vertexai
-PROJECT_ID = "data-dragon-409706"  # your project id
-REGION = "us-central1"
+PROJECT_ID = "dummy"  # your project id
+#REGION = "us-central1"
+REGION="europe-west2"
 
 vertexai.init(project=PROJECT_ID, location=REGION)
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:\\Users\\mmocak\\PycharmProjects\\ransx-ai\\google_creds\\data-dragon-409706-f89f065f78c3.json'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '<credential json file>'
 
 from vertexai.language_models import TextEmbeddingModel
 from vertexai.preview.generative_models import GenerativeModel, Image
